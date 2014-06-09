@@ -1,0 +1,29 @@
+@CHARSET "UTF-8";
+
+body {
+  padding-top: 50px;
+  padding-bottom: 20px;
+}
+
+.stage {
+  text-align: center;
+  display: inline-block;
+  padding: 16px;
+}
+
+.dragging {
+  cursor: move;
+}
+
+.cells {
+  padding: 0;
+  border-spacing: 0px;
+  margin: 0;
+  border: 0;
+  overflow: visible;
+  border-collapse: collapse;
+}
+
+.columns {
+  width: 100px;
+}
