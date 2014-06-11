@@ -1,12 +1,27 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.util.ArrayList"%>
+<%@ page import="java.util.List"%>
+<%@ page import="com.nixgon.steak.model.SteakDataModel"%>
+<%@ page import="com.nixgon.steak.model.SteakStageModel"%>
+<%@ page import="com.nixgon.steak.model.SteakPipelineModel"%>
+<%@ page import="com.google.appengine.api.datastore.DatastoreService"%>
+<%@ page import="com.google.appengine.api.datastore.DatastoreServiceFactory"%>
+<%@ page import="javax.jdo.PersistenceManager"%>
+<%@ page import="com.nixgon.steak.PMF"%>
 <!DOCTYPE html>
 <%
-	int pipelineCount = 7;
-	int stageCount = 10;
-	int columns = 16;
-	int rows = 100;
+	ArrayList< String > pipelines = (ArrayList< String >) request.getAttribute( "pipelines" );
+	ArrayList< String > stages = (ArrayList< String >) request.getAttribute( "stages" );
+	ArrayList< String > columns = (ArrayList< String >) request.getAttribute( "columns" );
+
+	List< SteakDataModel > steakData = (List< SteakDataModel >) request.getAttribute( "steakData" );
+	List< SteakStageModel > steakStage = (List< SteakStageModel >) request.getAttribute( "steakStage" );
+	List< SteakPipelineModel > steakPipeline = (List< SteakPipelineModel >) request.getAttribute( "steakPipeline" );
+
+	int pipelineCount = pipelines.size();
+	int stageCount = stages.size();
+	int colCount = columns.size();
 	int notiCount = 10;
-	int columnWidth = 0;
 %>
 <html>
 <head>
@@ -14,32 +29,6 @@
 <link href="./css/bootstrap.min.css" rel="stylesheet" media="screen">
 <link href="./css/steak.css" rel="stylesheet">
 <title>Steak</title>
-<script>
-	window.onload = function() {
-		var navbarWidth = document.getElementById('nav-container').offsetWidth;
-		var navItemWidth = document.getElementById('pipeline-container').offsetWidth;
-		
-		boxTable.style.maxWidth = document.getElementById('stageContainer').offsetWidth + 'px';
-		boxTable.style.minWidth = <%=columns%>*document.getElementById('cols').offsetWidth + 'px';
-		
-		mainContainer.style.height = (document.getElementById('mainContainer').offsetHeight - 60) + 'px';
-		boxContainer.style.height = (document.getElementById('boxContainer').offsetHeight - document.getElementById('stageContainer').offsetHeight) + 'px';
-	}
-
-	function changePipeline(lineNum) {
-		var anch = document.getElementById('pipeline');
-		anch.innerHTML = document.getElementById('pipeline_' + lineNum).innerHTML;
-	}
-	
-	function popupAlert(cell) {
-		var inner = cell.innerText;
-		alert(inner);
-	}
-	
-	function showDropdown() {
-		alert('dropdown!')
-	}
-</script>
 </head>
 <body>
   <div class="navbar navbar-inverse navbar-fixed-top navbar-">
@@ -52,13 +41,13 @@
       </div>
       <div class="navbar-collapse collapse" id="nav-container">
         <ul class="nav navbar-nav" id="pipeline-container">
-          <li class="active"><a href="#" id="pipeline">Pipeline 0</a></li>
+          <li class="active"><a href="#" id="pipeline"><%=steakPipeline.get( 0 ).getPipeline()%></a></li>
           <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Pipelines <b class="caret"></b></a>
             <ul class="dropdown-menu">
               <%
               	for ( int i = 0; i < pipelineCount; i++ ) {
               %>
-              <li><a href="#" onclick="changePipeline(<%=i%>)" id="pipeline_<%=i%>">Pipeline <%=i%></a></li>
+              <li><a href="#" onclick="changePipeline(<%=i%>)" id="pipeline_<%=i%>"><%=steakPipeline.get( i ).getPipeline()%></a></li>
               <%
               	}
               %>
@@ -79,7 +68,7 @@
         	for ( int i = 0; i < stageCount; i++ ) {
         %>
         <li class="stage dragging" id="stage_<%=i%>" style="background-color: #aaaaaa; width: <%=95 / stageCount%>%;">
-          <h2>0</h2> Stage <%=i%>
+          <h2>0</h2><%=steakPipeline.get( 0 ).getStages().get( i )%>
         </li>
         <%
         	}
@@ -92,12 +81,12 @@
         <!-- Column header -->
         <div class="col-header-container">
           <%
-          	for ( int i = 0; i < columns; i++ ) {
+          	for ( int i = 0; i < colCount; i++ ) {
           %>
           <div class="cols" id="cols">
-            <div class="cols-name">Column Header</div>
-            <div class="cols-settings"></div>
             <div class="cols-resize"></div>
+            <div class="cols-name"><%=steakPipeline.get( 0 ).getColumns().get( i )%></div>
+            <div class="cols-settings"></div>
           </div>
           <%
           	}
@@ -108,16 +97,24 @@
         %>
         <!-- Stage name -->
         <div class="stage-name">
-          <h2>
-            Stage
-            <%=i%></h2>
+          <h4><%=steakPipeline.get( 0 ).getStages().get( i )%></h4>
         </div>
         <%
-        	for ( int j = 0; j < columns; j++ ) {
+        	for ( int j = 0; j < steakStage.get( i ).getRows().size(); j++ ) {
+        			PersistenceManager pm = PMF.get().getPersistenceManager();
+        			SteakDataModel steak = pm.getObjectById( SteakDataModel.class, steakStage.get( i ).getRows().get( j ) );
         %>
-        <!-- Cells -->
-        <div class="cols" id="cols">
-          <div class="cols-name">Cell</div>
+        <div class="rows">
+          <%
+          	for ( int k = 0; k < colCount; k++ ) {
+          %>
+          <!-- Cells -->
+          <div class="cols" id="cols">
+            <div class="cols-name"><%=steak.getAuthor()%></div>
+          </div>
+          <%
+          	}
+          %>
         </div>
         <%
         	}
@@ -149,7 +146,9 @@
           <!-- Detail action -->
           <div class="comment">Comment!!!</div>
           <!-- Box -->
-          <a href="#"><h5>Box name</h5></a>
+          <h5>
+            <a href="#">Box name</a>
+          </h5>
         </div>
       </li>
       <%
@@ -157,6 +156,7 @@
       %>
     </ul>
   </div>
+  <script src="./js/steak.js"></script>
   <script src="./js/jquery.js"></script>
   <script src="./js/bootstrap.min.js"></script>
 </body>
