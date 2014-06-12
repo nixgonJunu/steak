@@ -74,9 +74,17 @@ body {
   background-color: rgb(254, 187, 9);
   margin: 0;
   padding: 0;
-  overflow: scroll;
   text-align: left;
   height: 100%;
+}
+
+.box-table {
+  background-color: rgb(254, 187, 9);
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  height: 100%;
+  overflow: scroll;
 }
 
 .cols {

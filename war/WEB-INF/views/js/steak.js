@@ -2,12 +2,11 @@ window.onload = function() {
 	var navbarWidth = document.getElementById( 'nav-container' ).offsetWidth;
 	var navItemWidth = document.getElementById( 'pipeline-container' ).offsetWidth;
 
-	boxTable.style.maxWidth = document.getElementById( 'stageContainer' ).offsetWidth + 'px';
 	boxTable.style.minWidth = ( colCount * 200 + 100 ) + 'px';
 
 	mainContainer.style.height = ( document.getElementById( 'mainContainer' ).offsetHeight - 60 ) + 'px';
-	boxContainer.style.height = ( document.getElementById( 'boxContainer' ).offsetHeight - document
-			.getElementById( 'stageContainer' ).offsetHeight )
+	boxContainer.style.height = ( document.getElementById( 'boxContainer' ).offsetHeight
+			- document.getElementById( 'stageContainer' ).offsetHeight - document.getElementById( 'colHeaderContainer' ).offsetHeight )
 			+ 'px';
 }
 

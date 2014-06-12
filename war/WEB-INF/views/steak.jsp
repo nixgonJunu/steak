@@ -107,31 +107,31 @@ var colCount = <%=colCount%>;
     </div>
 
     <div class="box-container" id="boxContainer">
-      <div class="box-table" id="boxTable">
-        <!-- Column header -->
-        <div class="col-header-container">
-          <div class="stage-cols" id="cols"
-            style="border: 1px rgb(160, 160, 160) solid; padding: 8px; width: 50px; height: 40px; text-align: center;">
-            <a href="#" onclick="foldToggleAll()"> <img class="arrow-down stage-down" id="downAll" src="" />
-            </a>
-          </div>
-          <div class="cols" id="cols" style="width: 50px; text-align: center;">
-            <div class="cols-name">
-              <input type="checkbox" class="chkbox" id="chk_all" onclick="checkAll()" />
-            </div>
-          </div>
-          <%
-          	for ( int i = 0; i < colCount; i++ ) {
-          %>
-          <div class="cols" id="cols">
-            <div class="cols-resize"></div>
-            <div class="cols-name"><%=pipeline.getColumns().get( i )%></div>
-            <div class="cols-settings"></div>
-          </div>
-          <%
-          	}
-          %>
+      <!-- Column header -->
+      <div class="col-header-container" id="colHeaderContainer">
+        <div class="stage-cols" id="cols"
+          style="border: 1px rgb(160, 160, 160) solid; padding: 8px; width: 50px; height: 40px; text-align: center;">
+          <a href="#" onclick="foldToggleAll()"> <img class="arrow-down stage-down" id="downAll" src="" />
+          </a>
         </div>
+        <div class="cols" id="cols" style="width: 50px; text-align: center;">
+          <div class="cols-name">
+            <input type="checkbox" class="chkbox" id="chk_all" onclick="checkAll()" />
+          </div>
+        </div>
+        <%
+        	for ( int i = 0; i < colCount; i++ ) {
+        %>
+        <div class="cols" id="cols">
+          <div class="cols-resize"></div>
+          <div class="cols-name"><%=pipeline.getColumns().get( i )%></div>
+          <div class="cols-settings"></div>
+        </div>
+        <%
+        	}
+        %>
+      </div>
+      <div class="box-table" id="boxTable">
         <%
         	for ( int i = 0; i < stageCount; i++ ) {
         %>
@@ -139,8 +139,8 @@ var colCount = <%=colCount%>;
         <div class="stage-name" id="<%=steakStage.get( i ).getStage()%>">
           <div class="stage-cols" id="cols" style="width: 50px; text-align: center;">
             <div class="stage-cols">
-              <a href="#" onclick="foldStage('<%=steakStage.get( i ).getStage().replaceAll( " ", "_" )%>')"> <img class="arrow-down stage-down"
-                id="downStage_<%=steakStage.get( i ).getStage().replaceAll( " ", "_" )%>" src="" />
+              <a href="#" onclick="foldStage('<%=steakStage.get( i ).getStage().replaceAll( " ", "_" )%>')"> <img
+                class="arrow-down stage-down" id="downStage_<%=steakStage.get( i ).getStage().replaceAll( " ", "_" )%>" src="" />
               </a>
             </div>
           </div>
