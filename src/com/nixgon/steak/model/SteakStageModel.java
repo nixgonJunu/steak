@@ -1,6 +1,7 @@
 package com.nixgon.steak.model;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
@@ -16,6 +17,15 @@ public class SteakStageModel {
 
 	@Persistent
 	private ArrayList< Key > rows;
+
+	@Persistent
+	private String pipeline;
+
+	@Persistent
+	private Date createdDate;
+
+	@Persistent
+	private Date modifiedDate;
 
 	public String getStage() {
 		return stage;
@@ -33,4 +43,27 @@ public class SteakStageModel {
 		this.rows = rows;
 	}
 
+	public String getPipeline() {
+		return pipeline;
+	}
+
+	public void setPipeline( String pipeline ) {
+		this.pipeline = pipeline;
+	}
+
+	public Date getCreatedDate() {
+		return createdDate;
+	}
+
+	public void setCreatedDate( Date createdDate ) {
+		this.createdDate = createdDate;
+	}
+
+	public Date getModifiedDate() {
+		return modifiedDate;
+	}
+
+	public void setModifiedDate( Date modifiedDate ) {
+		this.modifiedDate = modifiedDate;
+	}
 }

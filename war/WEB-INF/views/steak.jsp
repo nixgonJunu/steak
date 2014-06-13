@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.ArrayList"%>
 <%@ page import="java.util.List"%>
-<%@ page import="com.nixgon.steak.model.SteakDataModel"%>
+<%@ page import="com.nixgon.steak.model.SteakModel"%>
 <%@ page import="com.nixgon.steak.model.SteakStageModel"%>
 <%@ page import="com.nixgon.steak.model.SteakPipelineModel"%>
 <%@ page import="com.google.appengine.api.datastore.DatastoreService"%>
@@ -14,7 +14,7 @@
 	ArrayList< String > stages = (ArrayList< String >) request.getAttribute( "stages" );
 	ArrayList< String > columns = (ArrayList< String >) request.getAttribute( "columns" );
 
-	List< SteakDataModel > steakData = (List< SteakDataModel >) request.getAttribute( "steakData" );
+	List< SteakModel > steakData = (List< SteakModel >) request.getAttribute( "steakData" );
 	List< SteakStageModel > steakStage = (List< SteakStageModel >) request.getAttribute( "steakStage" );
 	List< SteakPipelineModel > steakPipeline = (List< SteakPipelineModel >) request.getAttribute( "steakPipeline" );
 
@@ -151,13 +151,13 @@ var colCount = <%=colCount%>;
             </div>
           </div>
           <div class="stage-cols">
-            <h4 class="stage-header"><%=steakStage.get( i ).getStage().replaceAll( " ", "_" )%></h4>
+            <h4 class="stage-header"><%=steakStage.get( i ).getStage()%></h4>
           </div>
         </div>
         <%
         	for ( int j = 0; j < steakStage.get( i ).getRows().size(); j++ ) {
-        			PersistenceManager pm = PMF.get().getPersistenceManager();
-        			SteakDataModel steak = pm.getObjectById( SteakDataModel.class, steakStage.get( i ).getRows().get( j ) );
+                			PersistenceManager pm = PMF.get().getPersistenceManager();
+                			SteakModel steak = pm.getObjectById( SteakModel.class, steakStage.get( i ).getRows().get( j ) );
         %>
         <div class="rows rows_<%=steakStage.get( i ).getStage().replaceAll( " ", "_" )%>">
           <div class="cols" id="cols_<%=steakStage.get( i ).getRows().get( j )%>_ico" style="width: 50px; text-align: center;">

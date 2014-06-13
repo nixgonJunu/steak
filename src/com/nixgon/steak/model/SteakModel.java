@@ -1,16 +1,18 @@
 package com.nixgon.steak.model;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 import javax.jdo.annotations.IdGeneratorStrategy;
+import javax.jdo.annotations.IdentityType;
 import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
 
 import com.google.appengine.api.datastore.Key;
 
-@PersistenceCapable
-public class SteakDataModel {
+@PersistenceCapable(identityType = IdentityType.APPLICATION, detachable = "true")
+public class SteakModel {
 
 	@PrimaryKey
 	@Persistent(valueStrategy = IdGeneratorStrategy.IDENTITY)
@@ -29,13 +31,13 @@ public class SteakDataModel {
 	private String author;
 
 	@Persistent
-	private Date date;
+	private Date createdDate;
 
 	@Persistent
-	private Date startDate;
+	private Date modifiedDate;
 
 	@Persistent
-	private Date dueDate;
+	private ArrayList< String > data;
 
 	public Key getKey() {
 		return key;
@@ -77,28 +79,27 @@ public class SteakDataModel {
 		this.author = author;
 	}
 
-	public Date getDate() {
-		return date;
+	public Date getCreatedDate() {
+		return createdDate;
 	}
 
-	public void setDate( Date date ) {
-		this.date = date;
+	public void setCreatedDate( Date createdDate ) {
+		this.createdDate = createdDate;
 	}
 
-	public Date getStartDate() {
-		return startDate;
+	public Date getModifiedDate() {
+		return modifiedDate;
 	}
 
-	public void setStartDate( Date startDate ) {
-		this.startDate = startDate;
+	public void setModifiedDate( Date modifiedDate ) {
+		this.modifiedDate = modifiedDate;
 	}
 
-	public Date getDueDate() {
-		return dueDate;
+	public ArrayList< String > getData() {
+		return data;
 	}
 
-	public void setDueDate( Date dueDate ) {
-		this.dueDate = dueDate;
+	public void setData( ArrayList< String > data ) {
+		this.data = data;
 	}
-
 }
