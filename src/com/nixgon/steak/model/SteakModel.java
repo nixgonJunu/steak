@@ -19,7 +19,13 @@ public class SteakModel {
 	private Key key;
 
 	@Persistent
-	private String stage;
+	private String owner;
+
+	@Persistent
+	private String table;
+
+	@Persistent
+	private String dish;
 
 	@Persistent
 	private String name;
@@ -37,7 +43,35 @@ public class SteakModel {
 	private Date modifiedDate;
 
 	@Persistent
-	private ArrayList< String > data;
+	private ArrayList< String > values;
+
+	public SteakModel( Key key, String owner, String table, String dish, String name, String note, String author, Date createdDate,
+			Date modifiedDate, ArrayList< String > values ) {
+		this.key = key;
+		this.owner = owner;
+		this.table = table;
+		this.dish = dish;
+		this.name = name;
+		this.note = note;
+		this.author = author;
+		this.createdDate = createdDate;
+		this.modifiedDate = modifiedDate;
+		this.values = values;
+	}
+
+	public SteakModel( Key key, String owner, String table, String dish, String name, String note, String author, Date createdDate,
+			Date modifiedDate ) {
+		this.key = key;
+		this.owner = owner;
+		this.table = table;
+		this.dish = dish;
+		this.name = name;
+		this.note = note;
+		this.author = author;
+		this.createdDate = createdDate;
+		this.modifiedDate = modifiedDate;
+		this.values = new ArrayList< String >();
+	}
 
 	public Key getKey() {
 		return key;
@@ -47,12 +81,28 @@ public class SteakModel {
 		this.key = key;
 	}
 
-	public String getStage() {
-		return stage;
+	public String getOwner() {
+		return owner;
 	}
 
-	public void setStage( String stage ) {
-		this.stage = stage;
+	public void setOwner( String owner ) {
+		this.owner = owner;
+	}
+
+	public String getTable() {
+		return table;
+	}
+
+	public void setTable( String table ) {
+		this.table = table;
+	}
+
+	public String getDish() {
+		return dish;
+	}
+
+	public void setDish( String dish ) {
+		this.dish = dish;
 	}
 
 	public String getName() {
@@ -95,11 +145,11 @@ public class SteakModel {
 		this.modifiedDate = modifiedDate;
 	}
 
-	public ArrayList< String > getData() {
-		return data;
+	public ArrayList< String > getValues() {
+		return values;
 	}
 
-	public void setData( ArrayList< String > data ) {
-		this.data = data;
+	public void setValues( ArrayList< String > values ) {
+		this.values = values;
 	}
 }

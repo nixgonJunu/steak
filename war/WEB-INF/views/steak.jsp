@@ -1,66 +1,44 @@
+<%@page import="com.nixgon.steak.model.SteakShapeModel"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.ArrayList"%>
 <%@ page import="java.util.List"%>
 <%@ page import="com.nixgon.steak.model.SteakModel"%>
-<%@ page import="com.nixgon.steak.model.SteakStageModel"%>
-<%@ page import="com.nixgon.steak.model.SteakPipelineModel"%>
+<%@ page import="com.nixgon.steak.model.SteakDishModel"%>
+<%@ page import="com.nixgon.steak.model.SteakTableModel"%>
+<%@ page import="com.nixgon.steak.model.SteakShapeModel"%>
 <%@ page import="com.google.appengine.api.datastore.DatastoreService"%>
 <%@ page import="com.google.appengine.api.datastore.DatastoreServiceFactory"%>
 <%@ page import="javax.jdo.PersistenceManager"%>
 <%@ page import="com.nixgon.steak.PMF"%>
 <!DOCTYPE html>
-<%
-	ArrayList< String > pipelines = (ArrayList< String >) request.getAttribute( "pipelines" );
-	ArrayList< String > stages = (ArrayList< String >) request.getAttribute( "stages" );
-	ArrayList< String > columns = (ArrayList< String >) request.getAttribute( "columns" );
-
-	List< SteakModel > steakData = (List< SteakModel >) request.getAttribute( "steakData" );
-	List< SteakStageModel > steakStage = (List< SteakStageModel >) request.getAttribute( "steakStage" );
-	List< SteakPipelineModel > steakPipeline = (List< SteakPipelineModel >) request.getAttribute( "steakPipeline" );
-
-	int pipelineCount = 0;
-	int stageCount = 0;
-	int colCount = 0;
-	int notiCount = 10;
-
-	SteakPipelineModel pipeline = null;
-
-	if ( pipelines != null ) {
-		pipelineCount = pipelines.size();
-		pipeline = steakPipeline.get( 0 );
-		System.out.println( "pipe " + steakPipeline.size() );
-	} else {
-		pipeline = new SteakPipelineModel();
-		ArrayList< String > cols = new ArrayList< String >();
-		ArrayList< String > stgs = new ArrayList< String >();
-		cols.add( "" );
-		stgs.add( "" );
-		pipeline.setColumns( cols );
-		pipeline.setPipeline( "Empty Pipeline" );
-		pipeline.setStages( stgs );
-	}
-
-	if ( stages != null ) {
-		stageCount = stages.size();
-		System.out.println( "stages " + steakStage.size() );
-	}
-
-	if ( columns != null ) {
-		colCount = columns.size();
-		System.out.println( "columns " + steakData.size() );
-	}
-%>
 <html>
+<%
+	SteakTableModel steakTable = (SteakTableModel) request.getAttribute( "steakTable" );
+	List< SteakTableModel > steakTables = (List< SteakTableModel >) request.getAttribute( "steakTables" );
+	List< SteakDishModel > steakDish = (List< SteakDishModel >) request.getAttribute( "steakDish" );
+	List< SteakModel > steaks = (List< SteakModel >) request.getAttribute( "steaks" );
+	SteakShapeModel shape = (SteakShapeModel) request.getAttribute( "shape" );
+	String owner = (String) request.getAttribute( "owner" );
+
+	int tableWidth = 0;
+	for ( int width : shape.getWidth() ) {
+		tableWidth += width;
+	}
+	tableWidth += 100;
+
+	System.out.println( "jsp table size : " + steakTables.size() );
+	System.out.println( "jsp dish size : " + steakDish.size() );
+	System.out.println( "jsp steak size : " + steaks.size() );
+	System.out.println( "jsp table width : " + tableWidth );
+%>
 <head>
 <meta charset="UTF-8">
 <link href="./css/bootstrap.min.css" rel="stylesheet" media="screen">
 <link href="./css/steak.css" rel="stylesheet">
 <title>Steak</title>
-<script>
-var colCount = <%=colCount%>;
-</script>
 </head>
 <body>
+
   <div class="navbar navbar-inverse navbar-fixed-top navbar-">
     <div class="container">
       <div class="navbar-header">
@@ -70,27 +48,123 @@ var colCount = <%=colCount%>;
         <a class="navbar-brand" href="#">Recipes - Steak</a>
       </div>
       <div class="navbar-collapse collapse" id="nav-container">
-        <ul class="nav navbar-nav" id="pipeline-container">
-          <li class="active"><a href="#" id="pipeline"><%=pipeline.getPipeline()%></a></li>
-          <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Pipelines<b class="caret"></b></a>
+        <ul class="nav navbar-nav" id="table-container">
+          <li class="active"><a href="#" id="table"><%=steakTable.getTable()%></a></li>
+          <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Tables<b
+              class="caret"></b></a>
             <ul class="dropdown-menu">
               <%
-              	for ( int i = 0; i < pipelineCount; i++ ) {
+              	for ( int i = 0; i < steakTables.size(); i++ ) {
               %>
-              <li><a href="#" onclick="changePipeline(<%=i%>)" id="pipeline_<%=i%>"><%=steakPipeline.get( i ).getPipeline()%></a></li>
+              <li><a href="#" onclick="changeTable(<%=i%>)" id="table_<%=i%>"><%=steakTables.get( i ).getTable()%></a></li>
               <%
               	}
               %>
             </ul></li>
         </ul>
         <form class="navbar-form navbar-right">
-          <input type="submit" class="btn btn-success" value="New Box" /> <input type="submit" class="btn btn-danger" value="Delete Box" />
-          <input type="submit" class="btn btn-info" value="Share Pipeline" />
+          <input type="submit" class="btn btn-success" value="New Box" /> <input type="submit" class="btn btn-danger"
+            value="Delete Box" /> <input type="submit" class="btn btn-info" value="Share Pipeline" />
         </form>
       </div>
     </div>
   </div>
 
+  <div class="main-container">
+    <div class="steak-container">
+      <div class="dish-container" id="dishContainer">
+        <!-- Dish header -->
+        <ul class="dish-list">
+          <%
+          	for ( int i = 0; i < steakDish.size(); i++ ) {
+          %>
+          <li class="dish dragging" id="dish_<%=i%>">
+            <h2><%=steakDish.get( i ).getRows().size()%></h2> <a href="#<%=steakDish.get( i ).getDish()%>"><%=steakDish.get( i ).getDish()%></a>
+          </li>
+          <%
+          	}
+          %>
+        </ul>
+      </div>
+      <div class="cell-container" id="cellContainer" style="min-height: 100%;">
+        <!-- Column header -->
+        <div class="cols-header-container" id="colHeaderContainer" style="max-width:<%=tableWidth%>px;">
+          <div class="cols cols-header cols-divine-size">
+            <img class="arrow folding-arrow" id="foldToggleAll" src="" onclick="foldToggleAll()" />
+          </div>
+          <div class="cols cols-header cols-divine-size">
+            <input type="checkbox" class="chkbox" id="chkToogleAll" onclick="chkToogleAll()" />
+          </div>
+          <%
+          	for ( int i = 0; i < steakTable.getColumns().size(); i++ ) {
+          %>
+          <div class="cols" style="width:<%=shape.getWidth().get( i )%>px;">
+            <div class="cols-inside cols-resize"></div>
+            <div class="cols-inside cols-name"><%=steakTable.getColumns().get( i )%></div>
+            <div class="cols-inside cols-settings"></div>
+          </div>
+          <%
+          	}
+          %>
+        </div>
+        <!-- Boxs -->
+        <div class="box-table" id="boxTable" style="max-width:<%=tableWidth%>px; min-height: 100%;">
+          <%
+          	for ( int i = 0; i < steakDish.size(); i++ ) {
+          %>
+          <!-- Stage name -->
+          <div class="dish-header" id="<%=steakDish.get( i ).getDish()%>">
+            <div class="cols-dish cols-divine-size">
+              <img class="arrow folding-arrow" id="foldToggleAll" src=""
+                onclick="foldDish'<%=steakDish.get( i ).getDish().replaceAll( " ", "_" )%>')" />
+            </div>
+            <div class="cols-dish cols-divine-size">
+              <input type="checkbox" class="chkbox" id="chk_<%=steakDish.get( i ).getDish().replaceAll( " ", "_" )%>"
+                onclick="checkDish'<%=steakDish.get( i ).getDish().replaceAll( " ", "_" )%>')" />
+            </div>
+            <div class="cols-dish dish-name">
+              <h4><%=steakDish.get( i ).getDish()%></h4>
+            </div>
+          </div>
+          <%
+          	}
+          %>
+        </div>
+      </div>
+    </div>
+    <div class="noti-container">
+      <ul style="padding: 0px;">
+        <%
+        	for ( int i = 0; i < 10; i++ ) {
+        %>
+        <li class="notify">
+          <div>
+            <!-- Author -->
+            <div style="display: inline-block;">
+              <h4>Author</h4>
+            </div>
+            <!-- Date -->
+            <div style="float: right; display: inline-block;">
+              <h6>Jun 10</h6>
+            </div>
+            <!-- Action -->
+            <h5>Added a comment</h5>
+            <!-- Detail action -->
+            <div class="comment">Comment!!!</div>
+            <!-- Box -->
+            <h5>
+              <a href="#">Box name</a>
+            </h5>
+          </div>
+        </li>
+        <%
+        	}
+        %>
+      </ul>
+    </div>
+  </div>
+
+  <%--
   <div class="main-container" id="mainContainer">
     <div class="stage-container" id="stageContainer">
       <ul style="padding: 0;">
@@ -191,39 +265,9 @@ var colCount = <%=colCount%>;
       </div>
     </div>
   </div>
-
-  <div class="noti-containter">
-    <ul style="padding: 0px;">
-      <%
-      	for ( int i = 0; i < notiCount; i++ ) {
-      %>
-      <li class="notify">
-        <div>
-          <!-- Author -->
-          <div style="display: inline-block;">
-            <h4>Author</h4>
-          </div>
-          <!-- Date -->
-          <div style="float: right; display: inline-block;">
-            <h6>Jun 10</h6>
-          </div>
-          <!-- Action -->
-          <h5>Added a comment</h5>
-          <!-- Detail action -->
-          <div class="comment">Comment!!!</div>
-          <!-- Box -->
-          <h5>
-            <a href="#">Box name</a>
-          </h5>
-        </div>
-      </li>
-      <%
-      	}
-      %>
-    </ul>
-  </div>
+--%>
   <script src="./js/steak.js"></script>
-  <script src="./js/jquery.js"></script>
+  <script src="./js/jquery-1.11.1.min.js"></script>
   <script src="./js/bootstrap.min.js"></script>
 </body>
 </html>

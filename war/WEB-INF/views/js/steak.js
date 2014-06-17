@@ -1,18 +1,12 @@
 window.onload = function() {
-	var navbarWidth = document.getElementById( 'nav-container' ).offsetWidth;
-	var navItemWidth = document.getElementById( 'pipeline-container' ).offsetWidth;
-
-	boxTable.style.minWidth = ( colCount * 200 + 100 ) + 'px';
-
-	mainContainer.style.height = ( document.getElementById( 'mainContainer' ).offsetHeight - 60 ) + 'px';
-	boxContainer.style.height = ( document.getElementById( 'boxContainer' ).offsetHeight
-			- document.getElementById( 'stageContainer' ).offsetHeight - document.getElementById( 'colHeaderContainer' ).offsetHeight )
+	cellContainer.style.minHeight = ( document.getElementById( 'cellContainer' ).offsetHeight - document
+			.getElementById( 'dishContainer' ).offsetHeight )
 			+ 'px';
 }
 
-function changePipeline( lineNum ) {
-	var anch = document.getElementById( 'pipeline' );
-	anch.innerHTML = document.getElementById( 'pipeline_' + lineNum ).innerHTML;
+function changeTable( lineNum ) {
+	var anch = document.getElementById( 'table' );
+	anch.innerHTML = document.getElementById( 'table_' + lineNum ).innerHTML;
 }
 
 function popupAlert( cell ) {
@@ -24,7 +18,7 @@ function showDropdown() {
 	alert( 'dropdown!' )
 }
 
-function checkAll() {
+function chkToogleAll() {
 	var elems = document.getElementsByTagName( 'input' ), i;
 	for ( i in elems ) {
 		if ( checkClass( elems[ i ].className, 'chkbox' ) ) {
