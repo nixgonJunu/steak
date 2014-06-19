@@ -1,4 +1,5 @@
-<%@page import="com.nixgon.steak.model.SteakShapeModel"%>
+<%@page import="java.util.Date"%>
+<%@page import="com.nixgon.steak.PMF"%>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.ArrayList"%>
 <%@ page import="java.util.List"%>
@@ -8,17 +9,19 @@
 <%@ page import="com.nixgon.steak.model.SteakShapeModel"%>
 <%@ page import="com.google.appengine.api.datastore.DatastoreService"%>
 <%@ page import="com.google.appengine.api.datastore.DatastoreServiceFactory"%>
+<%@ page import="com.google.appengine.api.datastore.Key"%>
 <%@ page import="javax.jdo.PersistenceManager"%>
-<%@ page import="com.nixgon.steak.PMF"%>
 <!DOCTYPE html>
 <html>
 <%
 	SteakTableModel steakTable = (SteakTableModel) request.getAttribute( "steakTable" );
 	List< SteakTableModel > steakTables = (List< SteakTableModel >) request.getAttribute( "steakTables" );
-	List< SteakDishModel > steakDish = (List< SteakDishModel >) request.getAttribute( "steakDish" );
-	List< SteakModel > steaks = (List< SteakModel >) request.getAttribute( "steaks" );
+	ArrayList< SteakDishModel > steakDish = (ArrayList< SteakDishModel >) request.getAttribute( "steakDish" );
+	ArrayList< SteakModel > steaks = (ArrayList< SteakModel >) request.getAttribute( "steaks" );
 	SteakShapeModel shape = (SteakShapeModel) request.getAttribute( "shape" );
 	String owner = (String) request.getAttribute( "owner" );
+  
+  int steakIndex = 0;
 
 	int tableWidth = 0;
 	for ( int width : shape.getWidth() ) {
@@ -37,6 +40,58 @@
 <link href="./css/steak.css" rel="stylesheet">
 <title>Steak</title>
 </head>
+<script>
+function insertNewDish() {
+	var msg = "Please enter dish name";
+	while(true) {
+	  var dishName = prompt(msg, "Dish");
+	  
+	  if (dishName == null)
+	  		return;
+	  
+	  if (dishName != '') {
+	  		<%for(SteakDishModel dish : steakDish) {%>
+	  		if (dishName == "<%=dish.getDish()%>") {
+	  			msg = "'" + dishName + "' is exist.\nPlease enter another dish name";
+	  			dishName = null;
+	  		}
+	    <%}%>
+	    
+	    if (dishName != null)
+		    break;
+	  }
+	}
+	
+	var url = "insertDish";
+	var params = "dishName=" + dishName;
+
+	$.ajax( {
+		type : "POST",
+		url : url,
+		data : params,
+		success : function( msg ) {
+			var html = '<div class="dish-header" id="'+dishName.replace( " ", "_" )+'" onclick="popupClick()">';
+			html += '<div class="cols-dish cols-divine-size">';
+			html += '<img class="arrow folding-arrow" id="foldToggleAll" src=""';
+			html += 'onclick="foldDish('+dishName.replace( " ", "_" )+')" />';
+			html += '</div>';
+			html += '<div class="cols-dish cols-divine-size">';
+			html += '<input type="checkbox" class="chkbox" id="chk_'+dishName.replace( " ", "_" )+'"';
+			html += 'onclick="checkDish('+dishName.replace( " ", "_" )+')" />';
+			html += '</div>';
+			html += '<div class="cols-dish dish-name">';
+			html += '<h4>'+dishName+'</h4>';
+			html += '</div>';
+			html += '</div>';
+			$('#boxTable').append(html);
+		}
+	} );
+}
+
+function popupClick() {
+	alert('clicked!');
+}
+</script>
 <body>
 
   <div class="navbar navbar-inverse navbar-fixed-top navbar-">
@@ -63,8 +118,10 @@
             </ul></li>
         </ul>
         <form class="navbar-form navbar-right">
-          <input type="submit" class="btn btn-success" value="New Box" /> <input type="submit" class="btn btn-danger"
-            value="Delete Box" /> <input type="submit" class="btn btn-info" value="Share Pipeline" />
+          <input type="button" class="btn btn-success" value="New Box" onclick="insertNewBox()" /> <input type="button"
+            class="btn btn-danger" value="Delete Box" onclick="deleteBox()" /> <input type="button"
+            class="btn btn-primary" value="New Dish" onclick="insertNewDish()" /> <input type="button"
+            class="btn btn-info" value="Share Pipeline" onclick="sharePipeline()" />
         </form>
       </div>
     </div>
@@ -73,18 +130,20 @@
   <div class="main-container">
     <div class="steak-container">
       <div class="dish-container" id="dishContainer">
-        <!-- Dish header -->
-        <ul class="dish-list">
+        <!-- Dish information -->
+        <div class="dish-list">
           <%
           	for ( int i = 0; i < steakDish.size(); i++ ) {
           %>
-          <li class="dish dragging" id="dish_<%=i%>">
-            <h2><%=steakDish.get( i ).getRows().size()%></h2> <a href="#<%=steakDish.get( i ).getDish()%>"><%=steakDish.get( i ).getDish()%></a>
-          </li>
+          <div class="dish dragging" id="dish_<%=steakDish.get( i ).getDish().replaceAll( " ", "_" )%>"
+            style="width: <%=100 / steakDish.size()%>%;">
+            <font size="7"><%=steakDish.get( i ).getRows().size()%></font><br> <a
+              href="#<%=steakDish.get( i ).getDish().replaceAll( " ", "_" )%>"><%=steakDish.get( i ).getDish()%></a>
+          </div>
           <%
           	}
           %>
-        </ul>
+        </div>
       </div>
       <div class="cell-container" id="cellContainer" style="min-height: 100%;">
         <!-- Column header -->
@@ -110,10 +169,11 @@
         <!-- Boxs -->
         <div class="box-table" id="boxTable" style="max-width:<%=tableWidth%>px; min-height: 100%;">
           <%
+          	steakIndex = 0;
           	for ( int i = 0; i < steakDish.size(); i++ ) {
           %>
-          <!-- Stage name -->
-          <div class="dish-header" id="<%=steakDish.get( i ).getDish()%>">
+          <!-- Dish name -->
+          <div class="dish-header" id="<%=steakDish.get( i ).getDish().replaceAll( " ", "_" )%>" onclick="popupClick()">
             <div class="cols-dish cols-divine-size">
               <img class="arrow folding-arrow" id="foldToggleAll" src=""
                 onclick="foldDish'<%=steakDish.get( i ).getDish().replaceAll( " ", "_" )%>')" />
@@ -126,41 +186,67 @@
               <h4><%=steakDish.get( i ).getDish()%></h4>
             </div>
           </div>
+          <!-- Steaks -->
+          <%
+          	for ( int j = 0; j < steakDish.get( i ).getRows().size(); j++ ) {
+          %>
+          <div class="rows-container rows-<%=steakDish.get( i ).getDish()%>" style="max-width:<%=tableWidth%>px;">
+            <div class="cols cols-divine-size">
+              <img src="./favicon.ico" />
+            </div>
+            <div class="cols cols-divine-size">
+              <input type="checkbox" class="checkbox chk-<%=steakDish.get( i ).getDish().replaceAll( " ", "_" )%>"
+                onclick="checkToggle('chk-<%=steakDish.get( i ).getDish().replaceAll( " ", "_" )%>')" />
+            </div>
+            <%
+            	for ( int k = 0; k < steakTable.getColumns().size(); k++ ) {
+            %>
+            <div class="cols" id="cols_cont" onclick="popupClick()">
+              <div class="cols-name"><%=steaks.get( steakIndex ).getValues().get( steakIndex )%></div>
+            </div>
+            <%
+            	steakIndex++;
+            			}
+            %>
+            <%
+            	}
+            %>
+            <%
+            	}
+            %>
+          </div>
+        </div>
+      </div>
+      <div class="noti-container">
+        <ul style="padding: 0px;">
+          <%
+          	for ( int i = 0; i < 10; i++ ) {
+          %>
+          <li class="notify">
+            <div>
+              <!-- Author -->
+              <div style="display: inline-block;">
+                <h4>Author</h4>
+              </div>
+              <!-- Date -->
+              <div style="float: right; display: inline-block;">
+                <h6>Jun 10</h6>
+              </div>
+              <!-- Action -->
+              <h5>Added a comment</h5>
+              <!-- Detail action -->
+              <div class="comment">Comment!!!</div>
+              <!-- Box -->
+              <h5>
+                <a href="#">Box name</a>
+              </h5>
+            </div>
+          </li>
           <%
           	}
           %>
-        </div>
+        </ul>
       </div>
-    </div>
-    <div class="noti-container">
-      <ul style="padding: 0px;">
-        <%
-        	for ( int i = 0; i < 10; i++ ) {
-        %>
-        <li class="notify">
-          <div>
-            <!-- Author -->
-            <div style="display: inline-block;">
-              <h4>Author</h4>
-            </div>
-            <!-- Date -->
-            <div style="float: right; display: inline-block;">
-              <h6>Jun 10</h6>
-            </div>
-            <!-- Action -->
-            <h5>Added a comment</h5>
-            <!-- Detail action -->
-            <div class="comment">Comment!!!</div>
-            <!-- Box -->
-            <h5>
-              <a href="#">Box name</a>
-            </h5>
-          </div>
-        </li>
-        <%
-        	}
-        %>
-      </ul>
     </div>
   </div>
 

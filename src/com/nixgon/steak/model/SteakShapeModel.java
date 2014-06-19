@@ -11,13 +11,13 @@ import javax.jdo.annotations.PrimaryKey;
 public class SteakShapeModel {
 
 	@PrimaryKey
-	private String table;
+	private String ownerTable;
 
 	@Persistent
 	private ArrayList< Integer > width;
 
-	public SteakShapeModel( String table ) {
-		this.table = table;
+	public SteakShapeModel( String ownerTable ) {
+		this.ownerTable = ownerTable;
 		this.width = new ArrayList< Integer >();
 		width.add( 200 );
 		width.add( 200 );
@@ -25,17 +25,17 @@ public class SteakShapeModel {
 		width.add( 200 );
 	}
 
-	public SteakShapeModel( String table, ArrayList< Integer > width ) {
-		this.table = table;
+	public SteakShapeModel( String ownerTable, ArrayList< Integer > width ) {
+		this.ownerTable = ownerTable;
 		this.width = width;
 	}
 
-	public String getTable() {
-		return table;
+	public String getOwnerTable() {
+		return ownerTable;
 	}
 
-	public void setTable( String table ) {
-		this.table = table;
+	public void setOwnerTable( String ownerTable ) {
+		this.ownerTable = ownerTable;
 	}
 
 	public ArrayList< Integer > getWidth() {
