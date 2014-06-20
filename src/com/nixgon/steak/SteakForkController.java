@@ -20,7 +20,6 @@ import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
 import com.nixgon.steak.model.SteakDishModel;
 import com.nixgon.steak.model.SteakModel;
-import com.nixgon.steak.model.SteakShapeModel;
 import com.nixgon.steak.model.SteakTableModel;
 
 @Controller
@@ -29,8 +28,7 @@ public class SteakForkController {
 
 	private SteakTableModel steakTable = null;
 	private List< SteakTableModel > steakTables = null;
-	private List< SteakShapeModel > shapes = null;
-	private ArrayList< SteakDishModel > steakDish = new ArrayList< SteakDishModel >();
+	ArrayList< SteakDishModel > steakDish = new ArrayList< SteakDishModel >();
 	private ArrayList< SteakModel > steaks = new ArrayList< SteakModel >();
 	private String owner = null;
 
@@ -43,14 +41,13 @@ public class SteakForkController {
 			ArrayList< String > dishList = steakTable.getDish();
 			dishList.add( dishName );
 			ArrayList< String > columnList = steakTable.getColumns();
-			SteakTableModel table = new SteakTableModel( steakTable.getTable(), owner, dishList, columnList,
+			steakTable = new SteakTableModel( steakTable.getTable(), owner, dishList, columnList,
 					steakTable.getCreatedDate(), new Date() );
-			SteakDishModel dish = new SteakDishModel( dishName, owner, steakTable.getTable(), new Date(), new Date() );
+			steakDish.add( new SteakDishModel( dishName, owner, steakTable.getTable(), new Date(), new Date() ) );
 
-			pm.makePersistent( table );
-			pm.makePersistent( dish );
+			pm.makePersistent( steakTable );
 
-			log.info( "Inset dish." );
+			log.info( "Insert dish." );
 		} finally {
 			pm.close();
 		}
@@ -61,7 +58,43 @@ public class SteakForkController {
 		mav.addObject( "steakTables", steakTables );
 		mav.addObject( "steakDish", steakDish );
 		mav.addObject( "steaks", steaks );
-		mav.addObject( "shapes", shapes );
+		mav.addObject( "owner", owner );
+
+		return mav;
+	}
+
+	@RequestMapping(value = "/deleteDish", method = RequestMethod.POST)
+	public ModelAndView deleteDish( HttpServletRequest request ) {
+		String dishName = request.getParameter( "dishName" );
+		log.info( dishName );
+
+		PersistenceManager pm = PMF.get().getPersistenceManager();
+		try {
+			ArrayList< String > dishList = steakTable.getDish();
+			dishList.remove( dishName );
+			ArrayList< String > columnList = steakTable.getColumns();
+			steakTable = new SteakTableModel( steakTable.getTable(), owner, dishList, columnList,
+					steakTable.getCreatedDate(), new Date() );
+			for ( SteakDishModel dish : steakDish ) {
+				if ( dish.getDish().equals( dishName ) ) {
+					steakDish.remove( dish );
+					break;
+				}
+			}
+
+			pm.makePersistent( steakTable );
+
+			log.info( "Delete dish." );
+		} finally {
+			pm.close();
+		}
+
+		ModelAndView mav = new ModelAndView( "steak" );
+		mav.setViewName( "data" );
+		mav.addObject( "steakTable", steakTable );
+		mav.addObject( "steakTables", steakTables );
+		mav.addObject( "steakDish", steakDish );
+		mav.addObject( "steaks", steaks );
 		mav.addObject( "owner", owner );
 
 		return mav;
@@ -82,12 +115,10 @@ public class SteakForkController {
 	@RequestMapping(value = "/steak")
 	public String steak( ModelMap model ) {
 		steakTable = null;
-		steakDish = new ArrayList< SteakDishModel >();
-		steaks = new ArrayList< SteakModel >();
+		steakDish.clear();
+		steaks.clear();
 		owner = null;
-		List< SteakDishModel > dishResults = null;
 		List< SteakModel > steakResults = null;
-		SteakShapeModel shape = null;
 
 		UserService userService = UserServiceFactory.getUserService();
 		User user = userService.getCurrentUser();
@@ -109,10 +140,7 @@ public class SteakForkController {
 				steakTables = new ArrayList< SteakTableModel >();
 				steakTables.add( steakTable );
 
-				shape = new SteakShapeModel( owner + "_" + steakTable.getTable() );
-
 				pm.makePersistent( steakTable );
-				pm.makePersistent( shape );
 			} else {
 				steakTable = steakTables.get( 0 );
 			}
@@ -124,22 +152,15 @@ public class SteakForkController {
 		pm = PMF.get().getPersistenceManager();
 
 		try {
-			Query qDish = pm.newQuery( SteakDishModel.class );
-			qDish.setFilter( "table == '" + steakTable.getTable() + "'" );
 			Query qSteak = pm.newQuery( SteakModel.class );
 			qSteak.setFilter( "table == '" + steakTable.getTable() + "'" );
-			Query qShape = pm.newQuery( SteakShapeModel.class );
-			qShape.setFilter( "ownerTable == '" + owner + "_" + steakTable.getTable() + "'" );
 
 			try {
-				dishResults = (List< SteakDishModel >) qDish.execute();
 				steakResults = (List< SteakModel >) qSteak.execute();
-				shapes = (List< SteakShapeModel >) qShape.execute();
 
-				log.info( "dish size : " + dishResults.size() );
 				log.info( "steak size : " + steakResults.size() );
 
-				if ( dishResults.isEmpty() ) {
+				if ( steakTable.getDish().isEmpty() ) {
 					// 테이블에 해당하는 디쉬가 하나도 없을 때, 새로운 디쉬 생성
 					steakDish.add( new SteakDishModel( "Main dish", owner, steakTable.getTable(), new Date(),
 							new Date() ) );
@@ -147,12 +168,9 @@ public class SteakForkController {
 				} else {
 					// 디쉬가 있으면 디쉬 별로 스테이크들을 정리
 					for ( String dishName : steakTable.getDish() ) {
-						for ( SteakDishModel dish : dishResults ) {
-							if ( dish.getDish().equals( dishName ) ) {
-								steakDish.add( dish );
-								break;
-							}
-						}
+						SteakDishModel dish = new SteakDishModel( dishName, owner, steakTable.getTable(), new Date(),
+								new Date() );
+						steakDish.add( dish );
 
 						for ( SteakModel steak : steakResults ) {
 							if ( steak.getDish().equals( dishName ) ) {
@@ -161,14 +179,7 @@ public class SteakForkController {
 						}
 					}
 				}
-
-				if ( shapes.isEmpty() ) {
-					shape = new SteakShapeModel( owner + "_" + "Empty table" );
-				} else {
-					shape = shapes.get( 0 );
-				}
 			} finally {
-				qDish.closeAll();
 				qSteak.closeAll();
 				pm.close();
 			}
@@ -180,8 +191,6 @@ public class SteakForkController {
 		model.addAttribute( "steakTables", steakTables );
 		model.addAttribute( "steakDish", steakDish );
 		model.addAttribute( "steaks", steaks );
-		model.addAttribute( "shape", shape );
-		model.addAttribute( "shapes", shapes );
 		model.addAttribute( "owner", owner );
 
 		return "steak";

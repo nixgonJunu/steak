@@ -48,7 +48,15 @@ body {
 }
 
 .dish {
+  background: white;
   display: table-cell;
+  vertical-align: middle;
+}
+
+.dish-active {
+  background: gray !important;
+  display: table-cell;
+  vertical-align: middle;
 }
 
 .dish-container {
@@ -159,6 +167,12 @@ body {
 .dish-header {
   vertical-align: middle;
   background: white;
+  width: 100%;
+}
+
+.dish-header-active {
+  vertical-align: middle;
+  background: gray !important;
   width: 100%;
 }
 

@@ -6,7 +6,6 @@
 <%@ page import="com.nixgon.steak.model.SteakModel"%>
 <%@ page import="com.nixgon.steak.model.SteakDishModel"%>
 <%@ page import="com.nixgon.steak.model.SteakTableModel"%>
-<%@ page import="com.nixgon.steak.model.SteakShapeModel"%>
 <%@ page import="com.google.appengine.api.datastore.DatastoreService"%>
 <%@ page import="com.google.appengine.api.datastore.DatastoreServiceFactory"%>
 <%@ page import="com.google.appengine.api.datastore.Key"%>
@@ -18,14 +17,12 @@
 	List< SteakTableModel > steakTables = (List< SteakTableModel >) request.getAttribute( "steakTables" );
 	ArrayList< SteakDishModel > steakDish = (ArrayList< SteakDishModel >) request.getAttribute( "steakDish" );
 	ArrayList< SteakModel > steaks = (ArrayList< SteakModel >) request.getAttribute( "steaks" );
-	SteakShapeModel shape = (SteakShapeModel) request.getAttribute( "shape" );
-  List< SteakShapeModel > shapes = (List< SteakShapeModel >) request.getAttribute( "shapes" );
 	String owner = (String) request.getAttribute( "owner" );
   
   int steakIndex = 0;
 
 	int tableWidth = 0;
-	for ( int width : shape.getWidth() ) {
+	for ( int width : steakTable.getCellWidth() ) {
 		tableWidth += width;
 	}
 	tableWidth += 100;
@@ -42,14 +39,17 @@
 <title>Steak</title>
 </head>
 <script>
+var steakDishList = [];
 window.onload = function() {
-	cellContainer.style.minHeight = ( document.getElementById( 'cellContainer' ).offsetHeight - document
+  cellContainer.style.minHeight = ( document.getElementById( 'cellContainer' ).offsetHeight - document
 			.getElementById( 'dishContainer' ).offsetHeight )
 			+ 'px';
+  <%for(SteakDishModel dish : steakDish) {%>
+  steakDishList.push('<%=dish.getDish()%>');
+   <%}%>
 }
 
 function insertNewDish() {
-	var steakSize = <%=steakDish.size()%>;
 	var msg = "Please enter dish name";
 	while(true) {
 	  var dishName = prompt(msg, "Dish");
@@ -78,31 +78,32 @@ function insertNewDish() {
 		url : url,
 		data : params,
 		success : function( msg ) {
-      var dishInfo = '<div class="dish dragging" id="dish_'+dishName.replace( " ", "_" )+'">';
+      var dishInfo = '<div class="dish dragging" id="dish_'+dishName.split(" ").join("_")+'">';
       dishInfo += '<font size="7">0</font><br>';
-      dishInfo += '<a href="#'+dishName.replace( " ", "_" )+'">'+dishName.replace( " ", "_" )+'</a>';
+      dishInfo += '<a href="#'+dishName.split(" ").join("_")+'">'+dishName+'</a>';
       dishInfo += '</div>';
 			$('#dishList').append(dishInfo);
-      
-      steakSize += 1;
+			
+			steakDishList.push(dishName);
       
       	var elems = document.getElementsByTagName( 'div' ), i;
       	for ( i in elems ) {
       		if ( checkClass( elems[ i ].className, 'dish' ) ) {
-      			elems[i].style.width = (100 / steakSize) + '%';
+      			elems[i].style.width = (100 / steakDishList.length) + '%';
       		}
       	}
       
-			var dishHeader = '<div class="dish-header" id="'+dishName.replace( " ", "_" )+'" onclick="popupClick()">';
+			var dishHeader = '<div class="dish-header" id="dishHeader_'+dishName.split(" ").join("_")+'" ';
+			dishHeader += 'onclick="popupClick(\''+dishName.split(" ").join("_")+'\')">';
 			dishHeader += '<div class="cols-dish cols-divine-size">';
-			dishHeader += '<img class="arrow folding-arrow" id="foldToggleAll" src=""';
-			dishHeader += 'onclick="foldDish('+dishName.replace( " ", "_" )+')" />';
+			dishHeader += '<img class="arrow folding-arrow" id="foldToggleAll" src="" ';
+			dishHeader += 'onclick="foldDish('+dishName.split(" ").join("_")+')" />';
 			dishHeader += '</div>';
-			dishHeader += '<div class="cols-dish cols-divine-size">';
-			dishHeader += '<input type="checkbox" class="chkbox" id="chk_'+dishName.replace( " ", "_" )+'"';
-			dishHeader += 'onclick="checkDish('+dishName.replace( " ", "_" )+')" />';
+			dishHeader += '<div class="cols-dish cols-divine-size" style="margin-left: 4px;">';
+			dishHeader += '<input type="checkbox" class="chkbox" id="chk_'+dishName.split(" ").join("_")+'" ';
+			dishHeader += 'onclick="checkDish('+dishName.split(" ").join("_")+')" />';
 			dishHeader += '</div>';
-			dishHeader += '<div class="cols-dish dish-name">';
+			dishHeader += '<div class="cols-dish dish-name" style="margin-left: 4px;">';
 			dishHeader += '<h4>'+dishName+'</h4>';
 			dishHeader += '</div>';
 			dishHeader += '</div>';
@@ -111,8 +112,77 @@ function insertNewDish() {
 	} );
 }
 
-function popupClick() {
-	alert('clicked!');
+function deleteDish() {
+	var dish = null;
+	var dishName = '';
+	var wantDelete = false;
+	
+	var elems = document.getElementsByTagName( 'div' ), i;
+	for ( i in elems ) {
+		if ( checkClass( elems[ i ].className, 'dish-header-active' ) ) {
+			dish = elems[ i ];
+			dishName = elems[ i ].id.replace("dishHeader_", "").split("_").join(" ");
+			wantDelete = confirm(dishName + ' 을 지우시겠습니까?');
+			
+			break;
+		}
+	}
+	
+	if (dish == null)
+		alert('Dish를 선택해주세요.');
+	
+	if (wantDelete == false) 
+		return;
+	
+	var url = "deleteDish";
+	var params = "dishName=" + dishName;
+
+	$.ajax( {
+		type : "POST",
+		url : url,
+		data : params,
+		success : function( msg ) {
+			$('.dish-active').remove();
+			
+			steakDishList.splice($.inArray(dishName, steakDishList), 1);
+      
+      	var elems = document.getElementsByTagName( 'div' ), i;
+      	for ( i in elems ) {
+      		if ( checkClass( elems[ i ].className, 'dish' ) ) {
+      			elems[i].style.width = (100 / steakDishList.length) + '%';
+      		}
+      	}
+
+  			$('.dish-header-active').remove();
+		}
+	} );
+}
+
+function popupClick(dishName) {
+	var dishHeader = document.getElementById( 'dishHeader_' + dishName );
+	var dish = document.getElementById( 'dish_' + dishName );
+	
+	// active 표시 지우기
+	var elems = document.getElementsByTagName( 'div' ), i;
+	for ( i in elems ) {
+		if ( checkClass( elems[ i ].className, 'dish-header-active' ) ) {
+			if (dishHeader != elems[ i ]) {
+				elems[ i ].className = elems[ i ].className.replace( ' dish-header-active', '' );
+			}
+		}
+	}
+	
+	if ( checkClass( dishHeader.className, 'dish-header-active' ) ) {
+		dishHeader.className = dishHeader.className.replace( ' dish-header-active', '' );
+	} else {
+		dishHeader.className += ' dish-header-active';
+	}
+	
+	if ( checkClass( dish.className, 'dish-active' ) ) {
+		dish.className = dish.className.replace( ' dish-active', '' );
+	} else {
+		dish.className += ' dish-active';
+	}
 }
 </script>
 <body>
@@ -144,6 +214,7 @@ function popupClick() {
           <input type="button" class="btn btn-success" value="New Box" onclick="insertNewBox()" /> <input type="button"
             class="btn btn-danger" value="Delete Box" onclick="deleteBox()" /> <input type="button"
             class="btn btn-primary" value="New Dish" onclick="insertNewDish()" /> <input type="button"
+            class="btn btn-danger" value="Delete Dish" onclick="deleteDish()" /> <input type="button"
             class="btn btn-info" value="Share Pipeline" onclick="sharePipeline()" />
         </form>
       </div>
@@ -180,7 +251,7 @@ function popupClick() {
           <%
           	for ( int i = 0; i < steakTable.getColumns().size(); i++ ) {
           %>
-          <div class="cols" style="width:<%=shape.getWidth().get( i )%>px;">
+          <div class="cols" style="width:<%=steakTable.getCellWidth().get( i )%>px;">
             <div class="cols-inside cols-resize"></div>
             <div class="cols-inside cols-name"><%=steakTable.getColumns().get( i )%></div>
             <div class="cols-inside cols-settings"></div>
@@ -196,7 +267,8 @@ function popupClick() {
           	for ( int i = 0; i < steakDish.size(); i++ ) {
           %>
           <!-- Dish name -->
-          <div class="dish-header" id="<%=steakDish.get( i ).getDish().replaceAll( " ", "_" )%>" onclick="popupClick()">
+          <div class="dish-header" id="dishHeader_<%=steakDish.get( i ).getDish().replaceAll( " ", "_" )%>"
+            onclick="popupClick('<%=steakDish.get( i ).getDish().replaceAll( " ", "_" )%>')">
             <div class="cols-dish cols-divine-size">
               <img class="arrow folding-arrow" id="foldToggleAll" src=""
                 onclick="foldDish'<%=steakDish.get( i ).getDish().replaceAll( " ", "_" )%>')" />
