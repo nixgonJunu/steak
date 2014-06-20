@@ -1,9 +1,3 @@
-window.onload = function() {
-	cellContainer.style.minHeight = ( document.getElementById( 'cellContainer' ).offsetHeight - document
-			.getElementById( 'dishContainer' ).offsetHeight )
-			+ 'px';
-}
-
 function changeTable( lineNum ) {
 	var anch = document.getElementById( 'table' );
 	anch.innerHTML = document.getElementById( 'table_' + lineNum ).innerHTML;

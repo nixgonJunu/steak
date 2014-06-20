@@ -29,6 +29,9 @@ public class SteakTableModel {
 	@Persistent
 	private Date modifiedDate;
 
+	@Persistent
+	private ArrayList< Integer > cellWidth;
+
 	// TODO: 공유 대상 - 연락처 연동
 
 	public SteakTableModel( String table, String owner, ArrayList< String > dish, ArrayList< String > columns,
@@ -39,6 +42,11 @@ public class SteakTableModel {
 		this.columns = columns;
 		this.createdDate = createdDate;
 		this.modifiedDate = modifiedDate;
+		this.cellWidth = new ArrayList< Integer >();
+		cellWidth.add( 200 );
+		cellWidth.add( 200 );
+		cellWidth.add( 200 );
+		cellWidth.add( 200 );
 	}
 
 	public SteakTableModel( String table, String owner, Date createdDate, Date modifiedDate ) {
@@ -53,6 +61,11 @@ public class SteakTableModel {
 		this.columns.add( "Author" );
 		this.createdDate = createdDate;
 		this.modifiedDate = modifiedDate;
+		this.cellWidth = new ArrayList< Integer >();
+		cellWidth.add( 200 );
+		cellWidth.add( 200 );
+		cellWidth.add( 200 );
+		cellWidth.add( 200 );
 	}
 
 	public String getTable() {
@@ -101,5 +114,13 @@ public class SteakTableModel {
 
 	public void setModifiedDate( Date modifiedDate ) {
 		this.modifiedDate = modifiedDate;
+	}
+
+	public ArrayList< Integer > getCellWidth() {
+		return cellWidth;
+	}
+
+	public void setCellWidth( ArrayList< Integer > cellWidth ) {
+		this.cellWidth = cellWidth;
 	}
 }

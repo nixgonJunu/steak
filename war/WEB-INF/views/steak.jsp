@@ -19,6 +19,7 @@
 	ArrayList< SteakDishModel > steakDish = (ArrayList< SteakDishModel >) request.getAttribute( "steakDish" );
 	ArrayList< SteakModel > steaks = (ArrayList< SteakModel >) request.getAttribute( "steaks" );
 	SteakShapeModel shape = (SteakShapeModel) request.getAttribute( "shape" );
+  List< SteakShapeModel > shapes = (List< SteakShapeModel >) request.getAttribute( "shapes" );
 	String owner = (String) request.getAttribute( "owner" );
   
   int steakIndex = 0;
@@ -41,7 +42,14 @@
 <title>Steak</title>
 </head>
 <script>
+window.onload = function() {
+	cellContainer.style.minHeight = ( document.getElementById( 'cellContainer' ).offsetHeight - document
+			.getElementById( 'dishContainer' ).offsetHeight )
+			+ 'px';
+}
+
 function insertNewDish() {
+	var steakSize = <%=steakDish.size()%>;
 	var msg = "Please enter dish name";
 	while(true) {
 	  var dishName = prompt(msg, "Dish");
@@ -49,7 +57,7 @@ function insertNewDish() {
 	  if (dishName == null)
 	  		return;
 	  
-	  if (dishName != '') {
+	  if (dishName != "") {
 	  		<%for(SteakDishModel dish : steakDish) {%>
 	  		if (dishName == "<%=dish.getDish()%>") {
 	  			msg = "'" + dishName + "' is exist.\nPlease enter another dish name";
@@ -70,20 +78,35 @@ function insertNewDish() {
 		url : url,
 		data : params,
 		success : function( msg ) {
-			var html = '<div class="dish-header" id="'+dishName.replace( " ", "_" )+'" onclick="popupClick()">';
-			html += '<div class="cols-dish cols-divine-size">';
-			html += '<img class="arrow folding-arrow" id="foldToggleAll" src=""';
-			html += 'onclick="foldDish('+dishName.replace( " ", "_" )+')" />';
-			html += '</div>';
-			html += '<div class="cols-dish cols-divine-size">';
-			html += '<input type="checkbox" class="chkbox" id="chk_'+dishName.replace( " ", "_" )+'"';
-			html += 'onclick="checkDish('+dishName.replace( " ", "_" )+')" />';
-			html += '</div>';
-			html += '<div class="cols-dish dish-name">';
-			html += '<h4>'+dishName+'</h4>';
-			html += '</div>';
-			html += '</div>';
-			$('#boxTable').append(html);
+      var dishInfo = '<div class="dish dragging" id="dish_'+dishName.replace( " ", "_" )+'">';
+      dishInfo += '<font size="7">0</font><br>';
+      dishInfo += '<a href="#'+dishName.replace( " ", "_" )+'">'+dishName.replace( " ", "_" )+'</a>';
+      dishInfo += '</div>';
+			$('#dishList').append(dishInfo);
+      
+      steakSize += 1;
+      
+      	var elems = document.getElementsByTagName( 'div' ), i;
+      	for ( i in elems ) {
+      		if ( checkClass( elems[ i ].className, 'dish' ) ) {
+      			elems[i].style.width = (100 / steakSize) + '%';
+      		}
+      	}
+      
+			var dishHeader = '<div class="dish-header" id="'+dishName.replace( " ", "_" )+'" onclick="popupClick()">';
+			dishHeader += '<div class="cols-dish cols-divine-size">';
+			dishHeader += '<img class="arrow folding-arrow" id="foldToggleAll" src=""';
+			dishHeader += 'onclick="foldDish('+dishName.replace( " ", "_" )+')" />';
+			dishHeader += '</div>';
+			dishHeader += '<div class="cols-dish cols-divine-size">';
+			dishHeader += '<input type="checkbox" class="chkbox" id="chk_'+dishName.replace( " ", "_" )+'"';
+			dishHeader += 'onclick="checkDish('+dishName.replace( " ", "_" )+')" />';
+			dishHeader += '</div>';
+			dishHeader += '<div class="cols-dish dish-name">';
+			dishHeader += '<h4>'+dishName+'</h4>';
+			dishHeader += '</div>';
+			dishHeader += '</div>';
+			$('#boxTable').append(dishHeader);
 		}
 	} );
 }
@@ -131,7 +154,7 @@ function popupClick() {
     <div class="steak-container">
       <div class="dish-container" id="dishContainer">
         <!-- Dish information -->
-        <div class="dish-list">
+        <div class="dish-list" id="dishList">
           <%
           	for ( int i = 0; i < steakDish.size(); i++ ) {
           %>
